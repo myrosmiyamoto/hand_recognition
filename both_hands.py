@@ -37,6 +37,7 @@ def recognize_gesture(landmarks):
         return "Paper"  # すべての指が開いている
     elif fingers[0] and fingers[1] and not fingers[2] and not fingers[3]:
         return "Scissors"  # 人差し指と中指が開いている
+    # [TODO] 👍️の処理の判定精度を上げるのが困難
     elif thumb_up and not any(fingers):
         return "Good"  # 親指が立っていて、他の指が閉じている
     elif not any(fingers):
@@ -47,23 +48,30 @@ def recognize_gesture(landmarks):
 # カメラ起動
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# 画像の幅と高さを設定
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         print("カメラが検出できません。")
         break
+    frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    # 画像を反転して左右を調整
+    frame = cv2.flip(frame, 1)
 
     # 画像をRGBに変換
-    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    image.flags.writeable = False
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame.flags.writeable = False
 
     # 手のランドマークを検出
-    results = hands.process(image)
-    image.flags.writeable = True
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    results = hands.process(frame)
+    frame.flags.writeable = True
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     left_hand_gesture = None
     right_hand_gesture = None
@@ -74,7 +82,7 @@ while cap.isOpened():
             handedness = results.multi_handedness[idx].classification[0].label  # "Left" または "Right"
 
             # ランドマークを描画
-            mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
             # 指の形状を認識
             gesture = recognize_gesture(hand_landmarks.landmark)
@@ -86,15 +94,15 @@ while cap.isOpened():
                 right_hand_gesture = gesture
 
             # 片手の結果を表示
-            cv2.putText(image, f"{handedness}: {gesture}", (10, 50 + idx * 30),
+            cv2.putText(frame, f"{handedness}: {gesture}", (10, 50 + idx * 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
     # 両手が「パー（Paper）」の場合
     if left_hand_gesture == "Paper" and right_hand_gesture == "Paper":
-        cv2.putText(image, "Both Hands Paper", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3, cv2.LINE_AA)
+        cv2.putText(frame, "Both Hands Paper", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3, cv2.LINE_AA)
 
     # 映像を表示
-    cv2.imshow('Hand Gesture Recognition', image)
+    cv2.imshow('Hand Gesture Recognition', frame)
 
     # 'q'キーで終了
     if cv2.waitKey(10) & 0xFF == ord('q'):

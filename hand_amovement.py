@@ -8,10 +8,11 @@ mp_drawing = mp.solutions.drawing_utils
 
 # カメラを起動
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # バッファを最小に設定
+# バッファを最小に設定
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 # 画像の幅と高さを設定
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) / 2)
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / 2)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
@@ -51,8 +52,6 @@ with mp_hands.Hands(
                 # 中心座標を計算
                 x_coords = [lm.x for lm in hand_landmarks.landmark]
                 y_coords = [lm.y for lm in hand_landmarks.landmark]
-                print(f'x_coords: {x_coords}')
-                print(f'y_coords: {y_coords}')
                 center_x = np.mean(x_coords)
                 center_y = np.mean(y_coords)
 

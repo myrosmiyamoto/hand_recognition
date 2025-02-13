@@ -36,8 +36,8 @@ def recognize_gesture(landmarks):
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # バッファを最小に設定
 # 画像の幅と高さを設定
-width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) / 2)
-height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) / 2)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
@@ -47,27 +47,32 @@ while cap.isOpened():
         print("カメラが検出できません。")
         break
 
+    frame = cv2.resize(frame, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    # 画像を反転して左右を調整
+    frame = cv2.flip(frame, 1)
+
     # 画像をRGBに変換
-    image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    image.flags.writeable = False
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame.flags.writeable = False
 
     # 手のランドマークを検出
-    results = hands.process(image)
-    image.flags.writeable = True
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    results = hands.process(frame)
+    frame.flags.writeable = True
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             # ランドマークを描画
-            mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
             # 指の形状を認識
             gesture = recognize_gesture(hand_landmarks.landmark)
             # 結果を表示
-            cv2.putText(image, gesture, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(frame, gesture, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
     # 映像を表示
-    cv2.imshow('Hand Gesture Recognition', image)
+    cv2.imshow('Hand Gesture Recognition', frame)
 
     # 'q'キーで終了
     if cv2.waitKey(10) & 0xFF == ord('q'):
