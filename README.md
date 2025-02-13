@@ -293,3 +293,89 @@ if cv2.waitKey(10) & 0xFF == ord('q'):
 - **手のランドマークを検出** して、指が開いているか閉じているかを判定
 - **「グー」、「チョキ」、「パー」をリアルタイムで認識**
 - **画面に結果を表示** する
+
+---
+
+# 両手のジェスチャーを認識するプログラムの説明
+
+`both_hands_gesture.py` のプログラムについて説明します。
+
+## 1. このプログラムでできること
+このプログラムでは、**カメラを使って手の形（グー・チョキ・パー・👍️）を認識** できます。
+- **グー（Rock）** : すべての指を閉じた状態
+- **チョキ（Scissors）** : 人差し指と中指だけ開いた状態
+- **パー（Paper）** : すべての指を開いた状態
+- **👍️（Good）** : 親指だけ立てて、他の指を閉じた状態
+
+さらに、**両手を認識** し、両手のジェスチャーが「パー」だった場合にメッセージを表示します。
+
+## 2. 必要なライブラリ
+プログラムを実行する前に、以下のライブラリをインストールしてください。
+```bash
+pip install opencv-python mediapipe numpy
+```
+
+---
+
+## 3. プログラムの動作の仕組み
+
+### (1) 両手を認識するための初期化
+```python
+hands = mp_hands.Hands(
+    static_image_mode=False,
+    max_num_hands=2,
+    model_complexity=0,
+    min_detection_confidence=0.8,
+    min_tracking_confidence=0.8
+)
+```
+- **max_num_hands=2** → **両手を認識可能**
+
+### (2) 右手か左手かを判定する方法
+```python
+handedness = results.multi_handedness[idx].classification[0].label
+```
+MediaPipeは、検出した手の **種類（右手・左手）** を判定する機能を持っています。
+- `handedness` の値は **"Right" または "Left"** になり、これを利用して **どちらの手かを判定** します。
+- その後、右手・左手それぞれのジェスチャーを記録し、画面に表示します。
+
+### (3) 右手か左手かを判定する方法
+```python
+handedness = results.multi_handedness[idx].classification[0].label
+```
+
+- MediaPipeは、検出した手の **種類（右手・左手）** を判定する機能を持っています。
+- `handedness` の値は **"Right"** または **"Left"** になり、これを利用して **どちらの手かを判定** します。
+
+その後、右手・左手それぞれのジェスチャーを記録し、画面に表示します。
+
+### (4) 2つの手を繰り返し処理
+```python
+for idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
+```
+→ **右手と左手の2つの手を1つずつ繰り返しで処理** します。
+
+### (5) 両手が「パー」の場合に特別メッセージを表示
+```python
+if left_hand_gesture == "Paper" and right_hand_gesture == "Paper":
+    cv2.putText(frame, "Both Hands Paper", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3, cv2.LINE_AA)
+```
+→ **両手がパーなら「Both Hands Paper」と表示**
+
+## 4. 実行方法
+
+1. **ターミナルまたはコマンドプロンプト** で以下のコマンドを実行。
+
+```
+python both_hands_gesture.py
+```
+
+1. **カメラの前で手を動かす** と、リアルタイムで「グー」「チョキ」「パー」「👍️」を判定します。
+
+1. **終了するときは 'q'キー を押します。**
+
+## 5. まとめ
+
+- **手のランドマークを検出** して、指の形状を判定
+- **「グー」、「チョキ」、「パー」、「👍️」をリアルタイムで認識**
+- **両手が「パー」の場合、メッセージを表示**
