@@ -18,18 +18,17 @@ hands = mp_hands.Hands(
 def recognize_gesture(landmarks):
     # 指の各関節のy座標を比較して、開いているか閉じているかを判定
     fingers = []
-    # 親指
-    fingers.append(landmarks[4].x < landmarks[3].x)  # 左手の場合、x座標が逆になるので注意
+
     # 人差し指～小指
     for tip_id in [8, 12, 16, 20]:
         fingers.append(landmarks[tip_id].y < landmarks[tip_id - 2].y)
 
     # ジェスチャー認識
-    if all(fingers[1:]):  # すべての指が開いている
+    if all(fingers):  # すべての指が開いている
         return "paper"
     elif not any(fingers):  # すべての指が閉じている
         return "rock"
-    elif fingers[1] and fingers[2] and not fingers[3] and not fingers[4]:
+    elif fingers[0] and fingers[1] and not fingers[2] and not fingers[3]:
         return "Scissors"  # 人差し指と中指が開いていて、薬指と小指が閉じている
     return "nothing"
 
